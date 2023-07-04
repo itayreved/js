@@ -73,6 +73,7 @@ camera.lookAt(0, 0, 0);
 
 // Event listener for mouse wheel
 document.addEventListener('wheel', handleMouseWheel);
+document.addEventListener('mouseup', handleMouseUp);
 
 // Mouse wheel event handler
 function handleMouseWheel(event) {
@@ -194,6 +195,36 @@ function getCmsItems(id, offset, count) {
       });
 
     return resp;
+}
+
+function handleMouseUp(event) {
+	var obj = getItersectedItem(event);
+	console.log(obj);
+}
+
+function getItersectedItem(event) {
+	// Calculate mouse position in normalized device coordinates
+	const mouse = new THREE.Vector2();
+	mouse.x = (event.offsetX / contDomElement.clientWidth) * 2 - 1;
+	mouse.y = -(event.offsetY / contDomElement.clientHeight) * 2 + 1;
+
+	// Create a raycaster
+	const raycaster = new THREE.Raycaster();
+	raycaster.setFromCamera(mouse, camera);
+
+	// Find intersecting objects
+	const intersects = raycaster.intersectObjects(scene.children[0].children, false);
+
+	// Check if any object was clicked
+	if (intersects.length > 0) {
+		const itersectedObj = intersects[0].object;
+		console.log(`Object ${itersectedObj.id} clicked: userIdx=${itersectedObj.userIndex} name=${itersectedObj.name}`);
+		if (itersectedObj.slide) {
+			itersectedObj.slide.material = slideMaterialRed;
+		}
+		return itersectedObj;
+	}
+	return null;
 }
 </script>
 <!--
