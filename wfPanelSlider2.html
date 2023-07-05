@@ -75,7 +75,7 @@ controls.enableZoom = false; // Disable zooming
 camera.position.set(0, 0.3, cameraZ);
 camera.lookAt(0, 0, 0);
 
-// Event listener for mouse wheel
+// Event listeners for mouse
 document.addEventListener('wheel', handleMouseWheel);
 document.addEventListener('mouseup', handleMouseUp);
 document.addEventListener('mousemove', handleMouseMove);
@@ -212,7 +212,16 @@ function getCmsItems(id, offset, count) {
 
 function handleMouseUp(event) {
 	var obj = getItersectedItem(event);
-	console.log(obj);
+	const baseUrl = "/project/";
+	const url = baseUrl + convertToSlug(obj.text);
+	console.log(`Jumping to: ${url}`);
+	window.location.href = url;
+}
+
+function convertToSlug(Text) {
+  return Text.toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "");
 }
 
 function setTitle(elem, value) {
