@@ -215,20 +215,30 @@ function handleMouseUp(event) {
 	console.log(obj);
 }
 
+function setTitle(elem, value) {
+	if (! elem) return;
+	if (value && value.length > 0) {
+		$(elem).text(value);
+		$(elem).css({'transition-duration': '0.1s'});
+		$(elem).css({opacity: '1'});
+	} else {
+		$(elem).css({'transition-duration': '0.5s'});
+		$(elem).css({opacity: '0'});
+	}
+}
+
 function handleMouseMove(event) {
 	var obj = getItersectedItem(event);
 	if (obj) {
 		if (obj !== lastHoveredObject) {
 			console.log(`Hovered ${obj.id} userIdx=${obj.userIndex} name=${obj.text}`);
 			lastHoveredObject = obj;
-			if (titleElement) {
-				$(titleElement).text(obj.text);
-			}
+			setTitle(titleElement, obj.text);
 		}
 	} else if (lastHoveredObject) {
 		console.log(`Off ${lastHoveredObject.id}`);
 		lastHoveredObject = null;
-		$(titleElement).text("");
+		setTitle(titleElement, "");
 	}
 	// console.log(obj);
 }
