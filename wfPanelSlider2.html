@@ -27,7 +27,8 @@ THREE.Cache.enabled = true;
 var lastHoveredObject = null;
 
 // var items = getCmsItems('64a26bea7b774d01d189a452', 0, 99);
-var items = getItemsFromContainer('.item_block', '.item_txt', '.item_img');
+// var items = getItemsFromContainer('.item_block', '.item_txt', '.item_img');
+var items = getItemsFromContainer([], '.item_block', {text:'.item_txt', image:'.item_img'});
 
 // Create the Three.js scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -148,15 +149,20 @@ function setImagePicture(panel) {
 	}
 }
 
-function getItemsFromContainer(containerClass, textClass, imageClass) {
-  var items = [];
+function getItemsFromContainer(init, containerClass, valueClassObj) {
+  var items = [].concat(init);
   var i = 0;
   $(containerClass).each(function() {
-    var txt = $(this).find(textClass).text();
-    var imgSrc = $(this).find(imageClass).attr('src');
-    i++;
-    console.log(i, txt, imgSrc);
-    items.push({image: imgSrc, text: txt});
+	var item = {};
+	for (let key in valueClassObj) {
+	    const txtval = $(this).find(valueClassObj[key]).text();
+    	const imgval = $(this).find(valueClassObj[key]).attr('src');
+		const val = imgval || txtval;
+		item[key] = val;
+	}
+	i++;
+	console.log(i, item);
+    items.push(item);
   });  
   console.log(`Got ${items.length} items`);
   return items;
