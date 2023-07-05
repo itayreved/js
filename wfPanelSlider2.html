@@ -17,14 +17,21 @@ const cameraZ = 3;
 const rowsSize = Math.floor(numPanels / columnSize);
 const blendZ = cameraZ - panelDistanceZ * 0.25;
 const minZ =  blendZ - panelDistanceZ * 0.25;
-const maxZ = cameraZ + panelDistanceZ * (rowsSize + 0.25);
+const maxZ = cameraZ + panelDistanceZ * (rowsSize - 0.29);
 const contDomElement = document.body;
 // const contDomElement = document.querySelectorAll(".canvas_container")[0];
 const titleElement = document.querySelectorAll("h1.top_heading")[0];
+setTitle(titleElement, "");
 var canvasSize = {x: contDomElement.clientWidth, y:contDomElement.clientHeight };
 const textureLoader = new THREE.TextureLoader();
 THREE.Cache.enabled = true;
 var lastHoveredObject = null;
+const zMoveAccel = 0.3;
+const zMoveDrag = 0.03;
+const zMoveMaxSpeed = 5;
+const zMoveMinSpeed = 0.0001;
+var zMoveSpeed = 0;
+var lastMousePos = null;
 
 // var items = getCmsItems('64a26bea7b774d01d189a452', 0, 99);
 // var items = getItemsFromContainer('.item_block', '.item_txt', '.item_img');
@@ -79,30 +86,49 @@ camera.lookAt(0, 0, 0);
 document.addEventListener('wheel', handleMouseWheel);
 document.addEventListener('mouseup', handleMouseUp);
 document.addEventListener('mousemove', handleMouseMove);
+setInterval(updatePosition, 30);
 
 // Mouse wheel event handler
 function handleMouseWheel(event) {
   const delta = Math.sign(event.deltaY);
-  const moveDistance = panelDistanceZ * delta / 12;
+  zMoveSpeed += (zMoveAccel * delta / 12);
+  zMoveSpeed = Math.max(-zMoveMaxSpeed, Math.min(zMoveSpeed, zMoveMaxSpeed));
+}
 
+ // Mouse wheel event handler
+function updatePosition() {
+	if (zMoveSpeed == 0) {
+	return;
+  }
+//   const moveDistance = panelDistanceZ * delta / 12;
+  const moveDistance = panelDistanceZ * zMoveSpeed;
+  zMoveSpeed *= (1 - zMoveDrag);
+  if (zMoveSpeed*zMoveSpeed < zMoveMinSpeed*zMoveMinSpeed) {
+	zMoveSpeed = 0;
+  }
+  
 //   camera.translateZ( - moveDistance );
 
 //   Move the panels in the direction of the mouse wheel
   rows.forEach(r => {
 	r.forEach(panel => {
 		panel.position.z += moveDistance;
-		const dist = cameraZ - panel.position.z;
+		var dist = cameraZ - panel.position.z;
 		if (dist > maxZ) {
-			panel.position.z += rows.length * panelDistanceZ;
+			// panel.position.z += rows.length * panelDistanceZ;
+			panel.position.z += rowsSize * panelDistanceZ;
+			dist = cameraZ - panel.position.z;
 			panel.rowIndex -= rows.length;
 			panel.userIndex -= numPanels;
 			// panel.material.opacity = (rowsSize - panel.rowIndex) / rowsSize;
 			const x = panel.colIndex * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
 			setImagePicture(panel);
-		} else if (dist < blendZ) {
-				panel.material.opacity = (dist - minZ) / (blendZ - minZ);
-				if (dist < minZ) {
-				panel.position.z -= rows.length * panelDistanceZ;
+		}
+		if (dist < blendZ) {
+			panel.material.opacity = (dist - minZ) / (blendZ - minZ);
+			if (dist < minZ) {
+				// panel.position.z -= rows.length * panelDistanceZ;
+				panel.position.z -= rowsSize * panelDistanceZ;
 				panel.rowIndex += rows.length;
 				panel.userIndex += numPanels;
 				const x = panel.colIndex * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
@@ -113,7 +139,7 @@ function handleMouseWheel(event) {
 	})
   });
 
-  handleMouseMove(event);
+  handleMouseMove();
 }
 
 function handleResize(event) {
@@ -254,10 +280,15 @@ function handleMouseMove(event) {
 
 function getItersectedItem(event) {
 	// Calculate mouse position in normalized device coordinates
-	const mouse = new THREE.Vector2();
-	mouse.x = (event.offsetX / contDomElement.clientWidth) * 2 - 1;
-	mouse.y = -(event.offsetY / contDomElement.clientHeight) * 2 + 1;
-
+	var mouse;
+	if (event) {
+		mouse = new THREE.Vector2();
+		mouse.x = (event.offsetX / contDomElement.clientWidth) * 2 - 1;
+		mouse.y = -(event.offsetY / contDomElement.clientHeight) * 2 + 1;
+		lastMousePos = mouse;
+	} else {
+		mouse = lastMousePos;
+	}
 	// Create a raycaster
 	const raycaster = new THREE.Raycaster();
 	raycaster.setFromCamera(mouse, camera);
