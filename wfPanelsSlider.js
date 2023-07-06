@@ -7,12 +7,19 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 window.addEventListener('resize', handleResize, false);
+
 // Set up controls to navigate through the panels
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableZoom = false; // Disable zooming
+// const controls = new THREE.OrbitControls(camera, renderer.domElement);
+// controls.enableZoom = false; // Disable zooming
+// controls.enablePan = false; // Disable panning
+// controls.enableRotate = false; // Disable rotate
+// controls.autoRotate = false; // Enable auto-rotation
+// controls.minPolarAngle = Math.PI/2;
+// controls.maxPolarAngle = Math.PI/2;
 
 // Create an array to store the panels
 const rows = [];
+var items = [];
 
 function initPanels() {
 	for (let r = 0; r < rowsSize; r++) {
@@ -49,6 +56,7 @@ function initPanels() {
 	document.addEventListener('mousemove', handleMouseMove);
 	setInterval(updatePosition, 30);
 }
+
 // Mouse wheel event handler
 function handleMouseWheel(event) {
   const delta = Math.sign(event.deltaY);
@@ -113,10 +121,9 @@ function handleResize(event) {
 // Render loop
 function animate() {
   requestAnimationFrame(animate);
-  controls.update(); // Update controls in each frame
+//   controls.update(); // Update controls in each frame
   renderer.render(scene, camera);
 }
-animate();
 
 function setImagePicture(panel) {
 	const imageIndex = (1000*items.length + panel.userIndex) % items.length;
