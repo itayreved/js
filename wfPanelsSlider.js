@@ -10,7 +10,8 @@ window.addEventListener('resize', handleResize, false);
 
 // Create an array to store the panels
 const rows = [];
-window.addEventListener("load", () => {
+
+function initPanels() {
 	for (let r = 0; r < rowsSize; r++) {
 		const row = [];
 		for (let c = 0; c < columnSize; c++) {
@@ -48,8 +49,7 @@ window.addEventListener("load", () => {
 	document.addEventListener('mouseup', handleMouseUp);
 	document.addEventListener('mousemove', handleMouseMove);
 	setInterval(updatePosition, 30);
-});
-
+}
 // Mouse wheel event handler
 function handleMouseWheel(event) {
   const delta = Math.sign(event.deltaY);
