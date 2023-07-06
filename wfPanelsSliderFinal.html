@@ -1,4 +1,42 @@
-// Create the Three.js scene, camera, and renderer
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+<script>
+  
+  // Create the realm with 100 panels
+const numPanels = 10;
+const panelDistanceX = 1.5;
+const panelDistanceZ = 2;
+const panelWidth = 1;
+const panelHeight = (16/9) * panelWidth;
+const panelBase = 0.1;
+const columnSize = 2;
+const cameraZ = 3;
+const rowsSize = Math.floor(numPanels / columnSize);
+const blendZ = cameraZ - panelDistanceZ * 0.25;
+const minZ =  blendZ - panelDistanceZ * 0.25;
+const maxZ = cameraZ + panelDistanceZ * (rowsSize - 0.29);
+const contDomElement = document.body;
+// const contDomElement = document.querySelectorAll(".canvas_container")[0];
+const titleElement = document.querySelectorAll("h1.top_heading")[0];
+var canvasSize = {x: contDomElement.clientWidth, y:contDomElement.clientHeight };
+const textureLoader = new THREE.TextureLoader();
+THREE.Cache.enabled = true;
+var lastHoveredObject = null;
+const zMoveAccel = 0.3;
+const zMoveDrag = 0.03;
+const zMoveMaxSpeed = 5;
+const zMoveMinSpeed = 0.0001;
+var zMoveSpeed = 0;
+var lastMousePos = null;
+const fogColor = 0x0;
+const fogNear = 5;
+const fogFar = 10;
+</script>
+<!-- <script src="https://cdn.jsdelivr.net/gh/itayreved/js@main/wfPanelsSlider.js"></script> -->
+<script>
+	// Create the Three.js scene, camera, and renderer
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog( fogColor, fogNear, fogFar );
 // scene.fog = new THREE.FogExp2( 0x202020, 0.1 );
@@ -7,12 +45,14 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 window.addEventListener('resize', handleResize, false);
+
 // Set up controls to navigate through the panels
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableZoom = false; // Disable zooming
 
 // Create an array to store the panels
 const rows = [];
+var items = [];
 
 function initPanels() {
 	for (let r = 0; r < rowsSize; r++) {
@@ -49,6 +89,7 @@ function initPanels() {
 	document.addEventListener('mousemove', handleMouseMove);
 	setInterval(updatePosition, 30);
 }
+
 // Mouse wheel event handler
 function handleMouseWheel(event) {
   const delta = Math.sign(event.deltaY);
@@ -116,7 +157,6 @@ function animate() {
   controls.update(); // Update controls in each frame
   renderer.render(scene, camera);
 }
-animate();
 
 function setImagePicture(panel) {
 	const imageIndex = (1000*items.length + panel.userIndex) % items.length;
@@ -234,3 +274,16 @@ function getItersectedItem(event) {
 	}
 	return null;
 }
+</script>
+<script>
+	window.addEventListener('load', () => {
+		setTitle(titleElement, "");
+//				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+    items = getItemsFromContainer(items, 'building', '.building_cont', {
+      text: '.item_txt', 
+      panelImage: '.item_image',
+      slug: '.item_slug'});
+		initPanels();
+		animate();
+	})
+</script>
