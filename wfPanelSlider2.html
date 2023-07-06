@@ -20,7 +20,6 @@ const maxZ = cameraZ + panelDistanceZ * (rowsSize - 0.29);
 const contDomElement = document.body;
 // const contDomElement = document.querySelectorAll(".canvas_container")[0];
 const titleElement = document.querySelectorAll("h1.top_heading")[0];
-setTitle(titleElement, "");
 var canvasSize = {x: contDomElement.clientWidth, y:contDomElement.clientHeight };
 const textureLoader = new THREE.TextureLoader();
 THREE.Cache.enabled = true;
@@ -34,13 +33,15 @@ var lastMousePos = null;
 const fogColor = 0x0;
 const fogNear = 5;
 const fogFar = 10;
-
-//				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
-var items = getItemsFromContainer([], 'project', '.item_block', {
-	text: '.item_txt', 
-	image: '.item_img',
-	panelImage: '.item_img',
-	slug: '.item_slug'});
-
 </script>
 <script src="https://cdn.jsdelivr.net/gh/itayreved/js@main/wfPanelsSlider.js"></script>
+<script>
+//				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+	var items = getItemsFromContainer([], 'project', '.item_block', {
+		text: '.item_txt', 
+		image: '.item_img',
+		panelImage: '.item_img',
+		slug: '.item_slug'});
+
+	setTitle(titleElement, "");
+</script>

@@ -10,44 +10,45 @@ window.addEventListener('resize', handleResize, false);
 
 // Create an array to store the panels
 const rows = [];
+window.addEventListener("load", () => {
+	for (let r = 0; r < rowsSize; r++) {
+		const row = [];
+		for (let c = 0; c < columnSize; c++) {
+			const geometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+			const material = new THREE.MeshBasicMaterial({ 
+				color: Math.random() * 0xffffff,
+				transparent: true, opacity: 1.0 });
+			const panel = new THREE.Mesh(geometry, material);
 
-for (let r = 0; r < rowsSize; r++) {
-	const row = [];
-	for (let c = 0; c < columnSize; c++) {
-		const geometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
-		const material = new THREE.MeshBasicMaterial({ 
-			color: Math.random() * 0xffffff,
-			transparent: true, opacity: 1.0 });
-		const panel = new THREE.Mesh(geometry, material);
-
-		const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
-		const z = -r * panelDistanceZ;
-		panel.rowIndex = r;
-		panel.colIndex = c;
-		panel.userIndex = r * columnSize + c;
-		panel.position.set(x, panelBase, z);
-		setImagePicture(panel);
-		// panel.material.opacity = (rowsSize - panel.rowIndex) / rowsSize;
-		// Add the panel to the scene
-		scene.add(panel);
-		row.push(panel);
+			const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
+			const z = -r * panelDistanceZ;
+			panel.rowIndex = r;
+			panel.colIndex = c;
+			panel.userIndex = r * columnSize + c;
+			panel.position.set(x, panelBase, z);
+			setImagePicture(panel);
+			// panel.material.opacity = (rowsSize - panel.rowIndex) / rowsSize;
+			// Add the panel to the scene
+			scene.add(panel);
+			row.push(panel);
+		}
+		rows.push(row);
 	}
-	rows.push(row);
-}
 
-// Set up controls to navigate through the panels
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableZoom = false; // Disable zooming
+	// Set up controls to navigate through the panels
+	const controls = new THREE.OrbitControls(camera, renderer.domElement);
+	controls.enableZoom = false; // Disable zooming
 
-// Set initial camera position
-camera.position.set(0, 0.3, cameraZ);
-camera.lookAt(0, 0, 0);
+	// Set initial camera position
+	camera.position.set(0, 0.3, cameraZ);
+	camera.lookAt(0, 0, 0);
 
-// Event listeners for mouse
-document.addEventListener('wheel', handleMouseWheel);
-document.addEventListener('mouseup', handleMouseUp);
-document.addEventListener('mousemove', handleMouseMove);
-setInterval(updatePosition, 30);
+	// Event listeners for mouse
+	document.addEventListener('wheel', handleMouseWheel);
+	document.addEventListener('mouseup', handleMouseUp);
+	document.addEventListener('mousemove', handleMouseMove);
+	setInterval(updatePosition, 30);
+});
 
 // Mouse wheel event handler
 function handleMouseWheel(event) {
