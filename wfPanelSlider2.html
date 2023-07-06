@@ -3,7 +3,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
 <script>
-	const stkn = '<token>';
   
   // Create the realm with 100 panels
 const numPanels = 10;
@@ -32,13 +31,20 @@ const zMoveMaxSpeed = 5;
 const zMoveMinSpeed = 0.0001;
 var zMoveSpeed = 0;
 var lastMousePos = null;
+const fogColor = 0x0;
+const fogNear = 5;
+const fogFar = 10;
 
-// var items = getCmsItems('64a26bea7b774d01d189a452', 0, 99);
-var items = getItemsFromContainer([], '.item_block', {text:'.item_txt', image:'.item_img'});
+//				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+var items = getItemsFromContainer([], 'project', '.item_block', {
+	text: '.item_txt', 
+	image: '.item_img',
+	panelImage: '.item_img',
+	slug: '.item_slug'});
 
 // Create the Three.js scene, camera, and renderer
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog( 0x0, 5, 10 );
+scene.fog = new THREE.Fog( fogColor, fogNear, fogFar );
 // scene.fog = new THREE.FogExp2( 0x202020, 0.1 );
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.3, 10000);
 const renderer = new THREE.WebGLRenderer();
@@ -160,12 +166,15 @@ function setImagePicture(panel) {
 	const imageIndex = (1000*items.length + panel.userIndex) % items.length;
 	if (!panel.imageIndex || panel.imageIndex != imageIndex) {
 		panel.imageIndex = imageIndex;
-		const imagePath = items[imageIndex].image;
-		panel.imagePath = imagePath;
-		panel.text = items[imageIndex].text;
-		textureLoader.load(imagePath, function(image) {
+		for (var f in items[imageIndex]) {
+			panel[f] = items[imageIndex][f];
+		}
+		// const imagePath = items[imageIndex].image;
+		// panel.imagePath = imagePath;
+		// panel.text = items[imageIndex].text;
+		textureLoader.load(panel.panelImage, function(image) {
 			const imageMaterial = new THREE.MeshBasicMaterial({
-			map: textureLoader.load(imagePath),
+			map: image,
 			transparent: true, opacity: 1.0,
 			side: THREE.FrontSide
 			});
@@ -174,73 +183,42 @@ function setImagePicture(panel) {
 	}
 }
 
-function getItemsFromContainer(init, containerClass, valueClassObj) {
+//	parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
   var items = [].concat(init);
   var i = 0;
   $(containerClass).each(function() {
 	var item = {};
 	for (let key in valueClassObj) {
-	    const txtval = $(this).find(valueClassObj[key]).text();
-    	const imgval = $(this).find(valueClassObj[key]).attr('src');
-		const val = imgval || txtval;
+		const elem = $(this).find(valueClassObj[key]);
+		var txtval = null;
+    	var imgval = null;
+		var attr = null;
+		$(elem).each( (inx, e) => {
+			txtval = txtval || $(e).text();
+    		imgval = imgval || $(e).attr('src');
+			attr = attr || e.getAttribute('slug');
+		})
+		const val = attr || imgval || txtval;
 		item[key] = val;
 	}
+	item.userParam = userParam;
 	i++;
-	console.log(i, item);
+	console.debug(i, item);
     items.push(item);
   });  
   console.log(`Got ${items.length} items`);
   return items;
 }
 
-function getCmsItems(id, offset, count) {
-	var resp = {};
-    const apiUrl = `https://api.webflow.com/collections/${id}/items?offset=${offset}&limit=${count}`;
-    const headers = {
-      'Access-Control-Allow-Origin': 'https://api.webflow.com',
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + stkn
-    };
-
-    // const params = {
-    //     offset: offset,
-    //     limit: count
-    // };
-
-    const requestOptions = {
-      method: 'GET', // HTTP method (GET, POST, PUT, etc.)
-      // body: JSON.stringify(params), // Convert params to JSON string
-      headers: headers
-    };
-
-    fetch(apiUrl, requestOptions)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        resp = response.json();
-				console.log(`Read successful with ${resp.items.length} items`);
-				return resp;
-      })
-      .then(data => {
-        // Handle the JSON response
-        // console.log(data);
-        // Use the data as needed
-				console.log(data);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-
-    return resp;
-}
-
 function handleMouseUp(event) {
 	var obj = getItersectedItem(event);
-	const baseUrl = "/project/";
-	const url = baseUrl + convertToSlug(obj.text);
-	console.log(`Jumping to: ${url}`);
-	window.location.href = url;
+	if (obj) {
+		const baseUrl = "/"+ obj.userParam + "/";
+		const url = baseUrl + obj.slug;
+		console.log(`Jumping to: ${url}`);
+		window.location.href = url;
+	}
 }
 
 function convertToSlug(Text) {
@@ -291,22 +269,13 @@ function getItersectedItem(event) {
 	// Create a raycaster
 	const raycaster = new THREE.Raycaster();
 	raycaster.setFromCamera(mouse, camera);
-
 	// Find intersecting objects
 	const intersects = raycaster.intersectObjects(scene.children, false);
-
 	// Check if any object was clicked
 	if (intersects.length > 0) {
 		const itersectedObj = intersects[0].object;
-		// console.log(`Object ${itersectedObj.id} clicked: userIdx=${itersectedObj.userIndex} name=${itersectedObj.text}`);
-		// if (itersectedObj.slide) {
-		// 	itersectedObj.slide.material = slideMaterialRed;
-		// }
 		return itersectedObj;
 	}
 	return null;
 }
 </script>
-<!--
-<script src="https://cdn.jsdelivr.net/gh/itayreved/js@main/wfPanelsSlider.js"></script>
--->
