@@ -1,0 +1,37 @@
+<!-- Page: Nav reality -->
+<style>
+    /*  body { margin: 0; overflow: hidden; } */
+    canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+    }
+
+    h1.top_heading {
+        position: absolute;
+        top: 10px;
+        width: 100%;
+        text-align: center;
+        z-index: 100;
+        display: block;
+        transition-duration: 1s;
+    }
+</style>
+
+<!-- Page: distracted-buildings/item-slug -->
+<style>
+	.w-dyn-item:nth-of-type(odd) > .building_image {
+  	    padding-top: 10vw;
+    }
+</style>
+
+
+<!-- Page: active_template -->
+<!-- Page: /active-buildings/item-slug -->
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script>
+  $( function() {
+    $(".collage_wrapper").draggable();
+  });
+</script>
