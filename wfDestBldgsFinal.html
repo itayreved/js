@@ -1,0 +1,132 @@
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script>
+
+var items = [];
+var currItem = 0;
+var buttonsSet = 0;
+const dispMapping = {
+			memoryRT: '.memory_disp', 
+			city: '.city_main_memory_disp', 
+			name: '.name_main_memory_disp',
+			state: '.building_state_title_disp', 
+			memoNum: '.memory_num_disp',
+			memoOwner: '.memory_owner_disp',
+			isPrivate: ['.memo_ispublic_disp', '.memo_isprivate_disp'],
+			memoryType: '.memo_type_disp',
+			btnNext: 'next_memo',
+			btnPrev: 'prev_memo'
+};
+
+// setDisplay(items, currItem, 
+//		['city', 'name', 'state', 'memoNum'], 
+//		['memoRT'], 
+//		['btnPrev', 'btnNext'], 
+//		['isPrivate'], dispMapping);
+function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, mapping) {
+	const item = items[currItem];
+	for (var f in textFlds) {
+		const e = $(mapping[f]);
+		$(e).text(item[f]);
+	}
+	for (var f in rtFlds) {
+		const e = $(mapping[f]);
+		$(e).text(item[f]);
+	}
+	// prevBtn
+	if (currItem == 0) {
+		const e = $(mapping[buttonFlds[0]]);
+		$(e).prop("disabled",true);
+	} else {
+		const e = $(mapping[buttonFlds[0]]);
+		$(e).prop("disabled",false);
+	}
+	// nextBtn
+	if (currItem == (items.length - 1)) {
+		const e = $(mapping[buttonFlds[1]]);
+		$(e).prop("disabled",true);
+	} else {
+		const e = $(mapping[buttonFlds[1]]);
+		$(e).prop("disabled",false);
+	}
+	for (var f in boolFlds) {
+		const eFalse = $(mapping[f][0]);
+		const eTrue = $(mapping[f][1]);
+		if (item[f] == 'On') {
+			$(eFalse).prop("visibility",'hidden');
+			$(eTrue).prop("visibility",'visibile');
+		} else {
+			$(eFalse).prop("visibility",'visibile');
+			$(eTrue).prop("visibility",'hidden');
+		}
+	}
+	if (!buttonsSet) {
+		buttonsSet = 1;
+		const ep = $(mapping[buttonFlds[0]]);
+		const en = $(mapping[buttonFlds[1]]);
+		$(ep).click(()=>{
+			currItem -= 1;
+			update();
+		});
+		$(en).click(()=>{
+			currItem += 1;
+			update();
+		});
+	}
+}
+
+function update() {
+	setDisplay(items,
+	currItem, 
+		['city', 'name', 'state', 'memoNum'], 
+		['memoRT'], 
+		['btnPrev', 'btnNext'], 
+		['isPrivate'], 
+		dispMapping);
+}
+
+//	parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
+  var items = [].concat(init);
+  var i = 0;
+  $(containerClass).each(function() {
+	var item = {};
+	for (let key in valueClassObj) {
+		const elem = $(this).find(valueClassObj[key]);
+		var txtval = null;
+    	var imgval = null;
+		var attr = null;
+		$(elem).each( (inx, e) => {
+			txtval = txtval || $(e).text();
+    		imgval = imgval || $(e).attr('src');
+			attr = attr || e.getAttribute('slug');
+		})
+		const val = attr || imgval || txtval;
+		item[key] = val;
+	}
+	item.userParam = userParam;
+	i++;
+	console.debug(i, item);
+    items.push(item);
+  });  
+  console.log(`Got ${items.length} items`);
+  return items;
+}
+
+</script>
+<script>
+//				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+	window.addEventListener('load', () => {
+		items = getItemsFromContainer(items, 'building', '.memo_info_cont', {
+			memoryRT: '.memory.code', 
+			city: '.building_city_main_memory', 
+			name: '.title_name_main_memory',
+			state: '.building_state_title', 
+			memoNum: '.memory_num',
+			memoOwner: '.memory_owner',
+			isPrivate: '.memo_ispublic',
+			memoryType: '.memo_type'
+		});
+		update();
+	})
+</script>
