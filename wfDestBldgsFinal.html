@@ -64,12 +64,14 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 		buttonsSet = 1;
 		const ep = $(mapping[buttonFlds[0]]);
 		const en = $(mapping[buttonFlds[1]]);
-		$(ep).click(()=>{
+		$(ep).off('click');
+		$(ep).on('click', ()=>{
 			currItem -= 1;
 			console.log("Prev:", currItem);
 			update();
 		});
-		$(en).click(()=>{
+		$(en).off('click');
+		$(en).on('click', ()=>{
 			currItem += 1;
 			console.log("Next:", currItem);
 			update();
