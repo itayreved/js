@@ -8,6 +8,7 @@
 const numPanels = 10;
 const panelDistanceX = 1.5;
 const panelDistanceZ = 2;
+const panelOffsetX = 0.3;
 const panelWidth = 1;
 const panelHeight = (16/9) * panelWidth;
 const panelBase = 0.1;
@@ -19,7 +20,11 @@ const minZ =  blendZ - panelDistanceZ * 0.25;
 const maxZ = cameraZ + panelDistanceZ * (rowsSize - 0.29);
 const contDomElement = document.body;
 // const contDomElement = document.querySelectorAll(".canvas_container")[0];
-const titleElement = document.querySelectorAll("h1.top_heading")[0];
+const titleElement = document.querySelectorAll("h1.title_name_main_reality")[0];
+const titleElementL = document.querySelectorAll(".building_title_info.building_state_title")[0];
+const titleElementR = document.querySelectorAll(".building_title_info.building_city_main_reality")[0];
+const titleElementBar = document.querySelectorAll("img.title_line_main_reality")[0];
+
 var canvasSize = {x: contDomElement.clientWidth, y:contDomElement.clientHeight };
 const textureLoader = new THREE.TextureLoader();
 THREE.Cache.enabled = true;
@@ -30,7 +35,8 @@ const zMoveMaxSpeed = 5;
 const zMoveMinSpeed = 0.0001;
 var zMoveSpeed = 0;
 var lastMousePos = null;
-const fogColor = 0x0;
+const clearColor = window.getComputedStyle(document.body ,null).getPropertyValue('background-color');
+const fogColor = clearColor;
 const fogNear = 5;
 const fogFar = 10;
 </script>
@@ -41,19 +47,11 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog( fogColor, fogNear, fogFar );
 // scene.fog = new THREE.FogExp2( 0x202020, 0.1 );
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.3, 10000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(new THREE.Color( clearColor ), 1);
 document.body.appendChild(renderer.domElement);
 window.addEventListener('resize', handleResize, false);
-
-// Set up controls to navigate through the panels
-// const controls = new THREE.OrbitControls(camera, renderer.domElement);
-// controls.enableZoom = false; // Disable zooming
-// controls.enablePan = false; // Disable panning
-// controls.autoRotate = false; // Enable auto-rotation
-// controls.minPolarAngle = Math.PI/2;
-// controls.maxPolarAngle = Math.PI/2;
-
 
 // Create an array to store the panels
 const rows = [];
@@ -69,7 +67,7 @@ function initPanels() {
 				transparent: true, opacity: 1.0 });
 			const panel = new THREE.Mesh(geometry, material);
 
-			const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
+			const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.4 * (Math.random() - 0.5) - panelOffsetX;
 			const z = -r * panelDistanceZ;
 			panel.rowIndex = r;
 			panel.colIndex = c;
@@ -232,12 +230,16 @@ function setTitle(elem, value) {
 	if (! elem) return;
 	if (value && value.length > 0) {
 		$(elem).text(value);
-		$(elem).css({'transition-duration': '0.1s'});
-		$(elem).css({opacity: '1'});
+		setOpacity(elem, 1);
 	} else {
-		$(elem).css({'transition-duration': '0.5s'});
-		$(elem).css({opacity: '0'});
+		setOpacity(elem, 0);
 	}
+}
+
+function setOpacity(elem, value) {
+	if (! elem) return;
+	$(elem).css({'transition-duration': ((value>0.5)?'0.1s':'0.5s')});
+	$(elem).css({opacity: ''+value});
 }
 
 function handleMouseMove(event) {
@@ -247,11 +249,17 @@ function handleMouseMove(event) {
 			console.log(`Hovered ${obj.id} userIdx=${obj.userIndex} name=${obj.text}`);
 			lastHoveredObject = obj;
 			setTitle(titleElement, obj.text);
+			setTitle(titleElementL, obj.state);
+			setTitle(titleElementR, obj.city);
+			setOpacity(titleElementBar, 1);
 		}
 	} else if (lastHoveredObject) {
 		console.log(`Off ${lastHoveredObject.id}`);
 		lastHoveredObject = null;
 		setTitle(titleElement, "");
+		setTitle(titleElementL, "");
+		setTitle(titleElementR, "");
+		setOpacity(titleElementBar, 0);
 	}
 	// console.log(obj);
 }
@@ -281,13 +289,20 @@ function getItersectedItem(event) {
 }
 </script>
 <script>
-	window.addEventListener('load', () => {
-		setTitle(titleElement, "");
 //				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
-    items = getItemsFromContainer(items, 'building', '.building_cont', {
-      text: '.item_text', 
-      panelImage: '.item_image',
-      slug: '.item_slug'});
+	window.addEventListener('load', () => {
+		items = getItemsFromContainer(items, 'building', '.building_cont', {
+			text: '.item_text', 
+			city: '.building_city', 
+			state: '.building_state', 
+			image: '.item_image',
+			panelImage: '.item_image',
+      		slug: '.item_slug'
+		});
+		setTitle(titleElement, "");
+		setTitle(titleElementL, "");
+		setTitle(titleElementR, "");
+		setOpacity(titleElementBar, 0);
 		initPanels();
 		animate();
 	})
