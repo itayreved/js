@@ -2,8 +2,7 @@
 <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
 <script>
-  
-  // Create the realm with 100 panels
+
 const numPanels = 10;
 const panelDistanceX = 1.5;
 const panelDistanceZ = 2;
@@ -88,14 +87,12 @@ function initPanels() {
 	setInterval(updatePosition, 30);
 }
 
-// Mouse wheel event handler
 function handleMouseWheel(event) {
   const delta = Math.sign(event.deltaY);
   zMoveSpeed += (zMoveAccel * delta / 12);
   zMoveSpeed = Math.max(-zMoveMaxSpeed, Math.min(zMoveSpeed, zMoveMaxSpeed));
 }
 
- // Mouse wheel event handler
 function updatePosition() {
 	if (zMoveSpeed == 0) {
 	return;
