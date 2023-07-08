@@ -36,17 +36,21 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 	if (currItem == 0) {
 		const e = $(mapping[buttonFlds[0]]);
 		$(e).prop("disabled",true);
+		$(e).attr("href", "javascript:prevMemory()");
 	} else {
 		const e = $(mapping[buttonFlds[0]]);
 		$(e).prop("disabled",false);
+		$(e).attr("href", "javascript:prevMemory()");
 	}
 	// nextBtn
 	if (currItem == (items.length - 1)) {
 		const e = $(mapping[buttonFlds[1]]);
 		$(e).prop("disabled",true);
+		$(e).attr("href", "javascript:nextMemory()");
 	} else {
 		const e = $(mapping[buttonFlds[1]]);
 		$(e).prop("disabled",false);
+		$(e).attr("href", "javascript:nextMemory()");
 	}
 	for (var f in boolFlds) {
 		const eFalse = $(mapping[boolFlds[f]][0]);
@@ -62,7 +66,7 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 }
 
 function nextMemory() {
-			currItem -= 1;
+			currItem += 1;
 			console.log("Prev:", currItem);
 			update();
 }
@@ -83,7 +87,7 @@ function update() {
 }
 
 //	parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
-function getItemsFromContainer(init, userParam, containerClass, valueClassObj, getHtml) {
+function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
   var items = [].concat(init);
   var i = 0;
   $(containerClass).each(function() {
@@ -94,8 +98,8 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj, g
     	var imgval = null;
 		var attr = null;
 		$(elem).each( (inx, e) => {
-			if (getHtml) {
-				txtva = $(e).html();
+			if (key.includes("RT")) {
+				txtval = $(e).html();
 			} else {
 				txtval = txtval || $(e).text();
 			}
@@ -119,6 +123,7 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj, g
 //				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
 	window.addEventListener('load', () => {
 		items = getItemsFromContainer(items, 'building', '.memo_info_cont', {
+			memoryRT: '.memory.code',
 			city: '.building_city_main_memory', 
 			name: '.title_name_main_memory',
 			state: '.building_state_title', 
@@ -126,10 +131,7 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj, g
 			memoOwner: '.memory_owner',
 			isPrivate: '.memo_ispublic.w-condition-invisible',
 			memoryType: '.memo_type'
-		}, false);
-		items = getItemsFromContainer(items, 'building', '.memo_info_cont', {
-			memoryRT: '.memory.code'
-		}, true);
+		});
 		update();
 	})
 </script>
