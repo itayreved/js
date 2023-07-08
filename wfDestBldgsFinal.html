@@ -26,12 +26,12 @@ const dispMapping = {
 function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, mapping) {
 	const item = items[currItem];
 	for (var f in textFlds) {
-		const e = $(mapping[f]);
-		$(e).text(item[f]);
+		const e = $(mapping[textFlds[f]]);
+		$(e).text(item[textFlds[f]]);
 	}
 	for (var f in rtFlds) {
-		const e = $(mapping[f]);
-		$(e).text(item[f]);
+		const e = $(mapping[rtFlds[f]]);
+		$(e).html(item[rtFlds[f]]);
 	}
 	// prevBtn
 	if (currItem == 0) {
@@ -50,14 +50,14 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 		$(e).prop("disabled",false);
 	}
 	for (var f in boolFlds) {
-		const eFalse = $(mapping[f][0]);
-		const eTrue = $(mapping[f][1]);
-		if (item[f] == 'On') {
-			$(eFalse).prop("visibility",'hidden');
-			$(eTrue).prop("visibility",'visibile');
+		const eFalse = $(mapping[boolFlds[f]][0]);
+		const eTrue = $(mapping[boolFlds[f]][1]);
+		if (item[boolFlds[f]]) {
+			$(eFalse).hide(100);
+			$(eTrue).show(100);
 		} else {
-			$(eFalse).prop("visibility",'visibile');
-			$(eTrue).prop("visibility",'hidden');
+			$(eFalse).show(100);
+			$(eTrue).hide(100);
 		}
 	}
 	if (!buttonsSet) {
@@ -66,10 +66,12 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 		const en = $(mapping[buttonFlds[1]]);
 		$(ep).click(()=>{
 			currItem -= 1;
+			console.log("Prev:", currItem);
 			update();
 		});
 		$(en).click(()=>{
 			currItem += 1;
+			console.log("Next:", currItem);
 			update();
 		});
 	}
@@ -78,8 +80,8 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 function update() {
 	setDisplay(items,
 	currItem, 
-		['city', 'name', 'state', 'memoNum'], 
-		['memoRT'], 
+		['city', 'name', 'state', 'memoNum', 'memoOwner', 'memoryType'], 
+		['memoryRT'], 
 		['btnPrev', 'btnNext'], 
 		['isPrivate'], 
 		dispMapping);
@@ -124,7 +126,7 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
 			state: '.building_state_title', 
 			memoNum: '.memory_num',
 			memoOwner: '.memory_owner',
-			isPrivate: '.memo_ispublic',
+			isPrivate: '.memo_ispublic.w-condition-invisible',
 			memoryType: '.memo_type'
 		});
 		update();
