@@ -8,8 +8,10 @@
 const numPanels = 10;
 const panelDistanceX = 1.5;
 const panelDistanceZ = 2;
+const panelOffsetX = 0.3;
 const panelWidth = 1;
 const panelHeight = (16/9) * panelWidth;
+const panelCornerRadius = 0;
 const panelBase = 0.1;
 const columnSize = 2;
 const cameraZ = 3;
@@ -18,7 +20,6 @@ const blendZ = cameraZ - panelDistanceZ * 0.25;
 const minZ =  blendZ - panelDistanceZ * 0.25;
 const maxZ = cameraZ + panelDistanceZ * (rowsSize - 0.29);
 const contDomElement = document.body;
-// const contDomElement = document.querySelectorAll(".canvas_container")[0];
 const titleElement = document.querySelectorAll("h1.top_heading")[0];
 var canvasSize = {x: contDomElement.clientWidth, y:contDomElement.clientHeight };
 const textureLoader = new THREE.TextureLoader();
@@ -30,32 +31,23 @@ const zMoveMaxSpeed = 5;
 const zMoveMinSpeed = 0.0001;
 var zMoveSpeed = 0;
 var lastMousePos = null;
-const fogColor = 0x0;
+const clearColor = window.getComputedStyle(document.body ,null).getPropertyValue('background-color');
+const fogColor = clearColor;
 const fogNear = 5;
 const fogFar = 10;
 </script>
 <!-- <script src="https://cdn.jsdelivr.net/gh/itayreved/js@main/wfPanelsSlider.js"></script> -->
 <script>
-	// Create the Three.js scene, camera, and renderer
+// Create the Three.js scene, camera, and renderer
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog( fogColor, fogNear, fogFar );
-// scene.fog = new THREE.FogExp2( 0x202020, 0.1 );
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.3, 10000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(new THREE.Color( clearColor ), 1);
 document.body.appendChild(renderer.domElement);
 window.addEventListener('resize', handleResize, false);
 
-// Set up controls to navigate through the panels
-// const controls = new THREE.OrbitControls(camera, renderer.domElement);
-// controls.enableZoom = false; // Disable zooming
-// controls.enablePan = false; // Disable panning
-// controls.enableRotate = false; // Disable rotate
-// controls.autoRotate = false; // Enable auto-rotation
-// controls.minPolarAngle = Math.PI/2;
-// controls.maxPolarAngle = Math.PI/2;
-
-// Create an array to store the panels
 const rows = [];
 var items = [];
 
@@ -63,13 +55,13 @@ function initPanels() {
 	for (let r = 0; r < rowsSize; r++) {
 		const row = [];
 		for (let c = 0; c < columnSize; c++) {
-			const geometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+			const geometry = createPanel(panelWidth, panelHeight, panelCornerRadius);
 			const material = new THREE.MeshBasicMaterial({ 
 				color: Math.random() * 0xffffff,
 				transparent: true, opacity: 1.0 });
 			const panel = new THREE.Mesh(geometry, material);
 
-			const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
+			const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.4 * (Math.random() - 0.5) - panelOffsetX;
 			const z = -r * panelDistanceZ;
 			panel.rowIndex = r;
 			panel.colIndex = c;
@@ -95,14 +87,31 @@ function initPanels() {
 	setInterval(updatePosition, 30);
 }
 
-// Mouse wheel event handler
+function createPanel(panelWidth, panelHeight, radius) {
+	if (!radius || radius <= 0) {
+		return new THREE.PlaneGeometry(panelWidth, panelHeight);
+	}
+	const x = -panelWidth / 2, y = 0;
+	const s = new THREE.Shape();
+	// s.moveTo( x, y - radius);
+	// s.lineTo( x , y - panelHeight + radius );
+	s.moveTo( x , y - panelHeight + radius );
+	s.arc(radius, 0, radius, Math.PI, Math.PI * 2 * 3 / 4);
+	s.lineTo( x + panelWidth - radius, y - panelHeight );
+	s.arc( 0, radius , radius, Math.PI * 2 * 3 / 4, Math.PI * 2);
+	s.lineTo( x + panelWidth, y - radius );
+	s.arc( -radius, 0, radius, Math.PI, Math.PI / 2);
+	s.lineTo( x + radius, y );
+	s.arc( 0, -radius , radius, Math.PI / 2, Math.PI);
+	return new THREE.ShapeGeometry(s);
+}
+
 function handleMouseWheel(event) {
   const delta = Math.sign(event.deltaY);
   zMoveSpeed += (zMoveAccel * delta / 12);
   zMoveSpeed = Math.max(-zMoveMaxSpeed, Math.min(zMoveSpeed, zMoveMaxSpeed));
 }
 
- // Mouse wheel event handler
 function updatePosition() {
 	if (zMoveSpeed == 0) {
 	return;
@@ -232,12 +241,16 @@ function setTitle(elem, value) {
 	if (! elem) return;
 	if (value && value.length > 0) {
 		$(elem).text(value);
-		$(elem).css({'transition-duration': '0.1s'});
-		$(elem).css({opacity: '1'});
+		setOpacity(elem, 1);
 	} else {
-		$(elem).css({'transition-duration': '0.5s'});
-		$(elem).css({opacity: '0'});
+		setOpacity(elem, 0);
 	}
+}
+
+function setOpacity(elem, value) {
+	if (! elem) return;
+	$(elem).css({'transition-duration': ((value>0.5)?'0.1s':'0.5s')});
+	$(elem).css({opacity: ''+value});
 }
 
 function handleMouseMove(event) {
