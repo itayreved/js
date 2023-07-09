@@ -4,6 +4,9 @@
 
 var items = [];
 var currItem = 0;
+// const separator = '<div class="state ab_state">|</div>';
+const separator = ' | ';
+
 const dispMapping = {
 			memoryRT: '.memory_disp', 
 			city: '.city_main_memory_disp', 
@@ -12,13 +15,13 @@ const dispMapping = {
 			memoNum: '.memory_num_disp',
 			memoOwner: '.memory_owner_disp',
 			isPrivate: ['.memo_ispublic_disp', '.memo_isprivate_disp'],
-			memoryType: '.memo_type_disp',
-			btnNext: 'next_memo',
-			btnPrev: 'prev_memo'
+			memoryTypesARRAY: '.memo_type_disp',
+			btnNext: '.next_memo',
+			btnPrev: '.prev_memo'
 };
 
 // setDisplay(items, currItem, 
-//		['city', 'name', 'state', 'memoNum'], 
+//		['city', 'name', 'state', 'memoNum', 'memoryTypesARRAY'], 
 //		['memoRT'], 
 //		['btnPrev', 'btnNext'], 
 //		['isPrivate'], dispMapping);
@@ -26,7 +29,23 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 	const item = items[currItem];
 	for (var f in textFlds) {
 		const e = $(mapping[textFlds[f]]);
-		$(e).text(item[textFlds[f]]);
+		if (item[textFlds[f]] instanceof Array) {
+			var arr = item[textFlds[f]];
+			// var out = '<div>' + arr[0] + '</div>';
+			// for (var i=1;i<arr.length;i++) {
+			// 	out += separator;
+			// 	out += '<div>' + arr[i] + '</div>';
+			// }
+			// $(e).html(out);
+			var out = arr[0];
+			for (var i=1;i<arr.length;i++) {
+				out += separator;
+				out += arr[i];
+			}
+			$(e).text(out);
+		} else {
+			$(e).text(item[textFlds[f]]);
+		}
 	}
 	for (var f in rtFlds) {
 		const e = $(mapping[rtFlds[f]]);
@@ -34,23 +53,39 @@ function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, map
 	}
 	// prevBtn
 	if (currItem == 0) {
-		const e = $(mapping[buttonFlds[0]]);
-		$(e).prop("disabled",true);
-		$(e).attr("href", "javascript:prevMemory()");
+		const e = document.querySelectorAll(mapping[buttonFlds[0]])[0];
+		e.setAttribute("disabled", true);
+		e.removeAttribute("href");
+		e.classList.add("button-disabled");
+		// const e = $(mapping[buttonFlds[0]]);
+		// $(e).prop("disabled",true);
+		// $(e).removeAttr("href");
 	} else {
-		const e = $(mapping[buttonFlds[0]]);
-		$(e).prop("disabled",false);
-		$(e).attr("href", "javascript:prevMemory()");
+		const e = document.querySelectorAll(mapping[buttonFlds[0]])[0];
+		e.setAttribute("disabled", false);
+		e.href = "javascript:prevMemory()";
+		e.classList.remove("button-disabled");
+		// const e = $(mapping[buttonFlds[0]]);
+		// $(e).prop("disabled",false);
+		// $(e).attr("href", "javascript:prevMemory()");
 	}
 	// nextBtn
 	if (currItem == (items.length - 1)) {
-		const e = $(mapping[buttonFlds[1]]);
-		$(e).prop("disabled",true);
-		$(e).attr("href", "javascript:nextMemory()");
+		const e = document.querySelectorAll(mapping[buttonFlds[1]])[0];
+		e.setAttribute("disabled", true);
+		e.removeAttribute("href");
+		e.classList.add("button-disabled");
+		// const e = $(mapping[buttonFlds[1]]);
+		// $(e).prop("disabled",true);
+		// $(e).removeAttr("href");
 	} else {
-		const e = $(mapping[buttonFlds[1]]);
-		$(e).prop("disabled",false);
-		$(e).attr("href", "javascript:nextMemory()");
+		const e = document.querySelectorAll(mapping[buttonFlds[1]])[0];
+		e.setAttribute("disabled", false);
+		e.href = "javascript:nextMemory()";
+		e.classList.remove("button-disabled");
+		// const e = $(mapping[buttonFlds[1]]);
+		// $(e).prop("disabled",false);
+		// $(e).attr("href", "javascript:nextMemory()");
 	}
 	for (var f in boolFlds) {
 		const eFalse = $(mapping[boolFlds[f]][0]);
@@ -79,7 +114,7 @@ function prevMemory() {
 function update() {
 	setDisplay(items,
 		currItem, 
-		['city', 'name', 'state', 'memoNum', 'memoOwner', 'memoryType'], 
+		['city', 'name', 'state', 'memoNum', 'memoOwner', 'memoryTypesARRAY'], 
 		['memoryRT'], 
 		['btnPrev', 'btnNext'], 
 		['isPrivate'], 
@@ -101,7 +136,16 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
 			if (key.includes("RT")) {
 				txtval = $(e).html();
 			} else {
-				txtval = txtval || $(e).text();
+				if (key.includes("ARRAY")) {
+					console.log(e);
+					const subElem = $(elem).find(valueClassObj[key]+'_item');
+					txtval = [];
+					$(subElem).each( (inx, se) => {
+						txtval.push($(se).text());
+					});
+				} else {
+					txtval = txtval || $(e).text();
+				}
 			}
     		imgval = imgval || $(e).attr('src');
 			attr = attr || e.getAttribute('slug');
@@ -130,7 +174,8 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
 			memoNum: '.memory_num',
 			memoOwner: '.memory_owner',
 			isPrivate: '.memo_ispublic.w-condition-invisible',
-			memoryType: '.memo_type'
+			memoryType: '.memo_type',
+			memoryTypesARRAY: '.memory_type_items'
 		});
 		update();
 	})

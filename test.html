@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Popup on Hover</title>
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .grid-item {
+            background-color: #f1f1f1;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200px;
+            background-color: #ffffff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            visibility: hidden;
+            opacity: 0;
+            transition: transform 2s, visibility 0s 1s, opacity 1s ease-in-out;
+            transform: rotateY(90deg);
+        }
+
+        .grid-item:hover .popup {
+            visibility: visible;
+            opacity: 1;
+            transition: transform 2s, visibility 0s 0s, opacity 2s ease-in-out;
+            transform: rotateY(0deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="grid">
+        <div class="grid-item">
+            Item 1
+            <div class="popup">
+                Popup Text 1
+            </div>
+        </div>
+        <div class="grid-item">
+            Item 2
+            <div class="popup">
+                Popup Text 2
+            </div>
+        </div>
+        <div class="grid-item">
+            Item 3
+            <div class="popup">
+                <div class="memory_disp distract w-richtext">
+                    <p>מבנה הליויתן בפארק שמול החוף היה קיים מאז שאני זוכר את עצמי. זה למעשה היה גן המשחקים שגדלנו בו.
+                        זה היה גם מבחן בגרות למי יש אומץ לטפס עד למעלה, למי יש אומץ לקפוץ מהזנב וכו'. לידו ערכנו ימי
+                        הולדת וידענו שבערב יש בני נוער מתנשקים שם.</p>
+                    <p>‍</p>
+                    <p> </p>
+                    <p>במהלך השנים הוא עבר מספר שינויים כמו תוספת של מגלשות וסגירת חלק מהפתחים, ולבסוף סגירתו כמזרקת מים
+                        עד הריסתו. השינויים בו הפכו את המקום לנוסטלגי מאוד, ויש המתהדרים שהם הכירו את הליויתן כשהוא
+                        עדיין היה פתוח או כשעדיין היו לו את המגלשות הכחולות ולא האדומות. לפניי מספר שנים הרסו את הליויתן
+                        וכל מה שנותר זה משטח הבטון עליו עמד.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
