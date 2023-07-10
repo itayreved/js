@@ -19,7 +19,7 @@ var posInfo = [[1500,1500], [2000,1500], [2500,2500],[2500,3000]];
 const dispMapping = {
 			memoryRT: '.memory_disp_a', 
 			city: '.city_main_memory_disp_a', 
-			name: '.name_main_memory_disp_a',
+			name: '.name_main_memory_active_disp',
 			state: '.building_state_title_disp_a', 
 			memoNum: '.memory_num_disp_a',
 			memoOwner: '.memory_owner_disp_a',
@@ -84,7 +84,18 @@ function updatePositions(posInfo) {
 }
 
 function update() {
-	var htmlText = null;	
+	// Update title info with first memory data
+	var htmlText = null;
+	const titleCont = $('.building_title_active');
+	setDisplay(titleCont, items,
+			0, 
+			['city', 'name', 'state'], 
+			[], 
+			[], 
+			[], 
+			dispMapping);
+
+	// Update memory popups data
 	for (var i=0;i<items.length;i++) {
 		const e = $( memoryInfoSelectorPref+(1+i));
 		const popup = $(e).find('.popup');
@@ -94,7 +105,7 @@ function update() {
 		}
 		setDisplay(e, items,
 			i, 
-			['city', 'name', 'state', 'memoNum', 'memoOwner', 'memoryTypesARRAY'], 
+			['memoNum', 'memoOwner', 'memoryTypesARRAY'], 
 			['memoryRT'], 
 			['btnPrev', 'btnNext'], 
 			['isPrivate'], 
@@ -158,8 +169,12 @@ function handleMouseUp(event) {
 	if (editModeActive) {
 		const newX =editModePos.left+(x-editMouseX);
 		const newY =editModePos.top+(y-editMouseY);
-		$(e).css({top: newY, left: newX});
-		console.debug(`Set new pos=[${newX},${newY}]`);
+		const pWidth = $(e).parent().width();
+		const pHeight = $(e).parent().height();
+		const leftPercent = Math.round(100*newX/pWidth);
+		const topPercent = Math.round(100*newY/pHeight);
+		$(e).css({top: `${topPercent}%`, left: `${leftPercent}%`});
+		console.debug(`Set new pos=[${newX},${newY}] = [${leftPercent}%,${topPercent}%]`);
 	} else {
 		console.debug(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey}`);
 	}
