@@ -148,14 +148,32 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
   return items;
 }
 
+var editMouseX, editMouseY, editModePos;
+var editModeActive = false;
 function handleMouseUp(event) {
 	var e = $('.memory_text_item.memory_1');
 	x = event.offsetX;
 	y = event.offsetY;
 	var pos = $(e).position();
-	console.log(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey}`);
+	if (editModeActive) {
+		const newX =editModePos.left+(x-editMouseX);
+		const newY =editModePos.top+(y-editMouseY);
+		$(e).css({top: newY, left: newX});
+		console.debug(`Set new pos=[${newX},${newY}]`);
+	} else {
+		console.debug(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey}`);
+	}
 	if (event.ctrlKey) {
-		$(e).css({top: x, left: y});
+		editModeActive = ! editModeActive;
+		if (editModeActive) {
+			console.log(`Edit on: pos=[${pos.left},${pos.top}]`);
+			editMouseX = x;
+			editMouseY = y;
+			editModePos = pos;
+			// $(e).css({left: editModePos.left+(x-editMouseX), top: editModePos.top+(y-editMouseY)});
+		} else {
+			console.log(`Edit off: pos=[${pos.left},${pos.top}]`);
+		}
 	}
 }
 

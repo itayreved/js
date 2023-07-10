@@ -1,0 +1,19 @@
+<script>
+    function memoJump(state, slug) {
+        window.location.href = '/' + ({
+            'נטוש': 'abounded-buildings',
+            'הרוס': 'distracted-buildings',
+            'פעיל': 'active-buildings'
+        })[state] + '/' + slug;
+    }
+</script>
+<a href="javascript:memoJump(,);" class="state other_state exist">זיכרון</a>
+
+
+<script>
+    function realJump(slug) {
+        window.location.href = '/building/' + slug;
+    }
+</script>
+<a href="javascript:realJump();" class="state other_state exist">מציאות</a>
+<a href="/building/rb-khn-dyzyngvp" class="state active_state active_state other_state">מציאות </a>
