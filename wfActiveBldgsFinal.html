@@ -1,0 +1,186 @@
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script>
+  $( function() {
+    $(".collage_wrapper").draggable();
+  });
+</script>
+<script>
+
+var items = [];
+var currItem = 0;
+// const separator = '<div class="state ab_state">|</div>';
+const separator = ' | ';
+
+const memoryInfoSelectorPref = '.memory_text_item.memory_';
+
+var posInfo = [[1500,1500], [2000,1500], [2500,2500],[2500,3000]];
+
+const dispMapping = {
+			memoryRT: '.memory_disp_a', 
+			city: '.city_main_memory_disp_a', 
+			name: '.name_main_memory_disp_a',
+			state: '.building_state_title_disp_a', 
+			memoNum: '.memory_num_disp_a',
+			memoOwner: '.memory_owner_disp_a',
+			isPrivate: ['.memo_ispublic_disp_a', '.memo_isprivate_disp_a'],
+			memoryTypesARRAY: '.memo_type_disp_a',
+			btnNext: '.next_memo_a',
+			btnPrev: '.prev_memo_a'
+};
+
+// setDisplay(items, currItem, 
+//		['city', 'name', 'state', 'memoNum', 'memoryTypesARRAY'], 
+//		['memoRT'], 
+//		['btnPrev', 'btnNext'], 
+//		['isPrivate'], dispMapping);
+function setDisplay(container, items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, mapping) {
+	const item = items[currItem];
+	for (var f in textFlds) {
+		const e = $(container).find(mapping[textFlds[f]]);
+		if (item[textFlds[f]] instanceof Array) {
+			var arr = item[textFlds[f]];
+			// var out = '<div>' + arr[0] + '</div>';
+			// for (var i=1;i<arr.length;i++) {
+			// 	out += separator;
+			// 	out += '<div>' + arr[i] + '</div>';
+			// }
+			// $(e).html(out);
+			var out = arr[0];
+			for (var i=1;i<arr.length;i++) {
+				out += separator;
+				out += arr[i];
+			}
+			$(e).text(out);
+		} else {
+			$(e).text(item[textFlds[f]]);
+		}
+	}
+	for (var f in rtFlds) {
+		const e = $(container).find(mapping[rtFlds[f]]);
+		$(e).html(item[rtFlds[f]]);
+	}
+	for (var f in boolFlds) {
+		const eFalse = $(container).find(mapping[boolFlds[f]][0]);
+		const eTrue = $(container).find(mapping[boolFlds[f]][1]);
+		if (item[boolFlds[f]]) {
+			$(eFalse).hide(100);
+			$(eTrue).show(100);
+		} else {
+			$(eFalse).show(100);
+			$(eTrue).hide(100);
+		}
+	}
+}
+
+function updatePositions(posInfo) {
+	for (var i=0;i<Math.min(4,posInfo.length);i++) {
+		var e = $( memoryInfoSelectorPref+(1+i));
+		const x = posInfo[i][0];
+		const y = posInfo[i][1];
+		$(e).css({left:x, top:y});
+		console.log(`update icon ${i+1} to (${x},${y})`);
+	}
+}
+
+function update() {
+	var htmlText = null;	
+	for (var i=0;i<items.length;i++) {
+		const e = $( memoryInfoSelectorPref+(1+i));
+		const popup = $(e).find('.popup');
+		htmlText = htmlText || $(popup).html();
+		if (i>0) {
+			$(popup).html(htmlText);
+		}
+		setDisplay(e, items,
+			i, 
+			['city', 'name', 'state', 'memoNum', 'memoOwner', 'memoryTypesARRAY'], 
+			['memoryRT'], 
+			['btnPrev', 'btnNext'], 
+			['isPrivate'], 
+			dispMapping);
+		$(e).show();
+	}
+	for (var i=items.length;i<4;i++) {
+		const e = $( memoryInfoSelectorPref+(1+i));
+		$(e).hide();
+	}
+}
+
+//	parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
+  var items = [].concat(init);
+  var i = 0;
+  $(containerClass).each(function() {
+	var item = {};
+	for (let key in valueClassObj) {
+		const elem = $(this).find(valueClassObj[key]);
+		var txtval = null;
+    	var imgval = null;
+		var attr = null;
+		$(elem).each( (inx, e) => {
+			if (key.includes("RT")) {
+				txtval = $(e).html();
+			} else {
+				if (key.includes("ARRAY")) {
+					console.log(e);
+					const subElem = $(elem).find(valueClassObj[key]+'_item');
+					txtval = [];
+					$(subElem).each( (inx, se) => {
+						txtval.push($(se).text());
+					});
+				} else {
+					txtval = txtval || $(e).text();
+				}
+			}
+    		imgval = imgval || $(e).attr('src');
+			attr = attr || e.getAttribute('slug');
+		})
+		const val = attr || imgval || txtval;
+		item[key] = val;
+	}
+	item.userParam = userParam;
+	i++;
+	console.debug(i, item);
+    items.push(item);
+  });  
+  console.log(`Got ${items.length} items`);
+  return items;
+}
+
+function handleMouseUp(event) {
+	var e = $('.memory_text_item.memory_1');
+	x = event.offsetX;
+	y = event.offsetY;
+	var pos = $(e).position();
+	console.log(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey}`);
+	if (event.ctrlKey) {
+		$(e).css({top: x, left: y});
+	}
+}
+
+</script>
+<script>
+//				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+	document.addEventListener('click', handleMouseUp);
+	window.addEventListener('load', () => {
+		var posStr = $('.memory_position_info').text();
+		if (posStr && posStr.length > 0) {
+			posObj = JSON.parse(posStr);
+			posInfo = (posObj && (posObj instanceof Array))?posObj:posInfo;
+		}
+		console.log(posInfo);
+		updatePositions(posInfo);
+		items = getItemsFromContainer(items, '_', '.memo_info_cont_a', {
+			memoryRT: '.memory_a.code',
+			city: '.building_city_main_memory_a', 
+			name: '.title_name_main_memory_a',
+			state: '.building_state_title_a', 
+			memoNum: '.memory_num_a',
+			memoOwner: '.memory_owner_a',
+			isPrivate: '.memo_ispublic_a.w-condition-invisible',
+			memoryTypesARRAY: '.memory_type_items_a'
+		});
+		update();
+	})
+</script>
