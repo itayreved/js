@@ -60,7 +60,7 @@ function initPanels() {
 			const geometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
 			const material = new THREE.MeshBasicMaterial({ 
 				color: Math.random() * 0xffffff,
-				transparent: true, opacity: 1.0 });
+				transparent: true, opacity: 0 });
 			const panel = new THREE.Mesh(geometry, material);
 
 			const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.4 * (Math.random() - 0.5) - panelOffsetX;
