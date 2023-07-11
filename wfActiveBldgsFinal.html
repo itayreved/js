@@ -15,6 +15,7 @@ const separator = ' | ';
 const memoryInfoSelectorPref = '.memory_text_item.memory_';
 
 var posInfo = [[1500,1500], [2000,1500], [2500,2500],[2500,3000]];
+var titlePos = [64,40];
 
 const dispMapping = {
 			memoryRT: '.memory_disp_a', 
@@ -73,28 +74,53 @@ function setDisplay(container, items, currItem, textFlds, rtFlds, buttonFlds, bo
 	}
 }
 
+function mouseToCollagePercent(x, y) {
+	const collageDim = getElementDimensions('.collage_wrapper');
+	const collagePosX = x; // - collageDim.left;
+	const collagePosY = y; // - collageDim.top;
+	// const leftPercent = Math.round(1000*collagePosX/collageDim.width)/10;
+    // const topPercent = Math.round(1000*collagePosY/collageDim.height)/10;
+	const leftPercent = 100*collagePosX/collageDim.width;
+    const topPercent = 100*collagePosY/collageDim.height;
+	console.debug(`mouseToCollagePercent(${x}, ${y})=${leftPercent},${topPercent}`);
+	return {px: leftPercent, py:topPercent};
+}
+
+function collagePercentToMouse(px, py) {
+	const collageDim = getElementDimensions('.collage_wrapper');
+	const collagePosX = px * collageDim.width / 100;
+	const collagePosY = py * collageDim.height / 100;
+	const x = collagePosX; // + collageDim.left;
+	const y = collagePosY; // + collageDim.top;
+	console.debug(`collagePercentToMouse(${px}, ${py})=${x},${y}`);
+	return {x: x, y: y};
+}
+
 function updatePositions(posInfo) {
 	for (var i=0;i<Math.min(4,posInfo.length);i++) {
 		var e = $( memoryInfoSelectorPref+(1+i));
-		const x = posInfo[i][0];
-		const y = posInfo[i][1];
-		$(e).css({left:x, top:y});
-		console.log(`update icon ${i+1} to (${x},${y})`);
+		const xPercent = posInfo[i][0];
+		const yPercent = posInfo[i][1];
+		const posCalc = collagePercentToMouse(xPercent, yPercent);
+		$(e).css({left: posCalc.x, top: posCalc.y});
+		console.log(`Update icon ${i+1} [${xPercent},${yPercent}] to (${posCalc.x},${posCalc.y})`);
+	}
+	// title container set
+	if (titlePos) {
+		var e = $('.data_container_active');
+		const lastIndex = posInfo.length - 1;
+		const xPercent = titlePos[0];
+		const yPercent = titlePos[1];
+		const posCalc = collagePercentToMouse(xPercent, yPercent);
+		const x = posCalc.x - $(e).width() + $(e).find('.building_title_active').width();
+		const y = posCalc.y;
+		$(e).css({left: x, top: y});
+		console.log(`Update title pos [${xPercent},${yPercent}] to (${posCalc.x},${posCalc.y})`);
 	}
 }
 
 function update() {
-	// Update title info with first memory data
 	var htmlText = null;
-	const titleCont = $('.building_title_active');
-	setDisplay(titleCont, items,
-			0, 
-			['city', 'name', 'state'], 
-			[], 
-			[], 
-			[], 
-			dispMapping);
-
 	// Update memory popups data
 	for (var i=0;i<items.length;i++) {
 		const e = $( memoryInfoSelectorPref+(1+i));
@@ -159,6 +185,17 @@ function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
   return items;
 }
 
+function getElementDimensions(sel) {
+	const collageWrapper = $(sel);
+	const collage = $(collageWrapper).find('.collage');
+	const w = $(collage).width();
+	const h = $(collage).height();
+	const t = $(collageWrapper).position().top;
+	const l = $(collageWrapper).position().left;
+	console.debug(`CollageDim: ${w}x${h} at (${l},${t})`);
+	return { height: h, width:w, top:t, left: l};
+}
+
 var editMouseX, editMouseY, editModePos;
 var editModeActive = false;
 function handleMouseUp(event) {
@@ -167,18 +204,19 @@ function handleMouseUp(event) {
 	y = event.offsetY;
 	var pos = $(e).position();
 	if (editModeActive) {
-		const newX =editModePos.left+(x-editMouseX);
-		const newY =editModePos.top+(y-editMouseY);
-		const pWidth = $(e).parent().width();
-		const pHeight = $(e).parent().height();
-		const leftPercent = Math.round(100*newX/pWidth);
-		const topPercent = Math.round(100*newY/pHeight);
-		$(e).css({top: `${topPercent}%`, left: `${leftPercent}%`});
-		console.debug(`Set new pos=[${newX},${newY}] = [${leftPercent}%,${topPercent}%]`);
+		const newX = editModePos.left + (x-editMouseX);
+		const newY = editModePos.top + (y-editMouseY);
+		// const pWidth = $(e).parent().width();
+		// const pHeight = $(e).parent().height();
+		const collagePercentPos = mouseToCollagePercent(newX, newY);
+		const mousePos = collagePercentToMouse(collagePercentPos.px, collagePercentPos.py);
+		// $(e).css({top: `${topPercent}%`, left: `${leftPercent}%`});
+		$(e).css({top: `${newY}px`, left: `${newX}px`});
+		console.debug(`Set new pos=[${newX},${newY}] = (%) [${collagePercentPos.px},${collagePercentPos.py}]`);
 	} else {
-		console.debug(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey}`);
+		console.debug(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey||event.shiftKey}`);
 	}
-	if (event.ctrlKey) {
+	if (event.ctrlKey || event.shiftKey) {
 		editModeActive = ! editModeActive;
 		if (editModeActive) {
 			console.log(`Edit on: pos=[${pos.left},${pos.top}]`);
@@ -201,6 +239,7 @@ function handleMouseUp(event) {
 		if (posStr && posStr.length > 0) {
 			posObj = JSON.parse(posStr);
 			posInfo = (posObj && (posObj instanceof Array))?posObj:posInfo;
+			titlePos = (posInfo.length > 4)?posInfo[posInfo.length-1]:titlePos;
 		}
 		console.log(posInfo);
 		updatePositions(posInfo);
