@@ -104,20 +104,16 @@ function updatePosition() {
 	zMoveSpeed = 0;
   }
   
-//   camera.translateZ( - moveDistance );
-
 //   Move the panels in the direction of the mouse wheel
   rows.forEach(r => {
 	r.forEach(panel => {
 		panel.position.z += moveDistance;
 		var dist = cameraZ - panel.position.z;
 		if (dist > maxZ) {
-			// panel.position.z += rows.length * panelDistanceZ;
 			panel.position.z += rowsSize * panelDistanceZ;
 			dist = cameraZ - panel.position.z;
 			panel.rowIndex -= rows.length;
 			panel.userIndex -= numPanels;
-			// panel.material.opacity = (rowsSize - panel.rowIndex) / rowsSize;
 			const x = panel.colIndex * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
 			setImagePicture(panel);
 		}
@@ -146,7 +142,6 @@ function handleResize(event) {
   renderer.setSize(canvasSize.x, canvasSize.y);
 }
 
-// Render loop
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
@@ -249,11 +244,9 @@ function handleMouseMove(event) {
 		setTitle(titleElementR, "");
 		setOpacity(titleElementBar, 0);
 	}
-	// console.log(obj);
 }
 
 function getItersectedItem(event) {
-	// Calculate mouse position in normalized device coordinates
 	var mouse;
 	if (event) {
 		mouse = new THREE.Vector2();
@@ -279,7 +272,8 @@ function getItersectedItem(event) {
 <script>
 //				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
 	window.addEventListener('load', () => {
-		items = getItemsFromContainer(items, 'distracted-buildings', '.destroyed_building_cont', {
+		var items1 = [];
+		items1 = getItemsFromContainer(items1, 'distracted-buildings', '.destroyed_building_cont', {
 			text: '.item_text', 
 			city: '.building_city', 
 			state: '.building_state', 
@@ -287,7 +281,16 @@ function getItersectedItem(event) {
 			panelImage: '.item_image',
       		slug: '.item_slug'
 		});
-		items = getItemsFromContainer(items, 'abounded-buildings', '.abandoned_building_cont', {
+		// All abandoned records were migrated into distructed.
+		// items1 = getItemsFromContainer(items1, 'abounded-buildings', '.abandoned_building_cont', {
+		// 	text: '.item_text', 
+		// 	city: '.building_city', 
+		// 	state: '.building_state', 
+		// 	image: '.item_image',
+		// 	panelImage: '.item_image',
+      	// 	slug: '.item_slug'
+		// });
+		items1 = getItemsFromContainer(items1, 'active-buildings', '.active_building_cont', {
 			text: '.item_text', 
 			city: '.building_city', 
 			state: '.building_state', 
@@ -295,14 +298,9 @@ function getItersectedItem(event) {
 			panelImage: '.item_image',
       		slug: '.item_slug'
 		});
-		items = getItemsFromContainer(items, 'active-buildings', '.active_building_cont', {
-			text: '.item_text', 
-			city: '.building_city', 
-			state: '.building_state', 
-			image: '.item_image',
-			panelImage: '.item_image',
-      		slug: '.item_slug'
-		});
+		console.debug('Before compare:', items1);
+		items = items1.sort((a,b)=>a.slug.localeCompare(b.slug));
+		console.debug('After compare:', items);
 
 		setTitle(titleElement, "");
 		setTitle(titleElementL, "");

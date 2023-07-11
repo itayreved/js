@@ -212,7 +212,7 @@ function handleMouseUp(event) {
 		const mousePos = collagePercentToMouse(collagePercentPos.px, collagePercentPos.py);
 		// $(e).css({top: `${topPercent}%`, left: `${leftPercent}%`});
 		$(e).css({top: `${newY}px`, left: `${newX}px`});
-		console.debug(`Set new pos=[${newX},${newY}] = (%) [${collagePercentPos.px},${collagePercentPos.py}]`);
+		console.log(`Set new pos=[${newX},${newY}] = (%) [${collagePercentPos.px},${collagePercentPos.py}]`);
 	} else {
 		console.debug(`Clicked [${x},${y}] M1-pos: (${pos.left},${pos.top}) Diff: (${pos.left-x},${pos.top-y})) set: ${event.ctrlKey||event.shiftKey}`);
 	}
