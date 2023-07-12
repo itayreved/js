@@ -1,0 +1,313 @@
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
+<script>
+
+    const numPanels = 10;
+    const panelDistanceX = 1.5;
+    const panelDistanceZ = 2;
+    const panelOffsetX = 0.15;
+    const panelWidth = 1;
+    const panelHeight = (16 / 9) * panelWidth;
+    const panelBase = 0.1;
+    const columnSize = 2;
+    const cameraZ = 3;
+    const rowsSize = Math.floor(numPanels / columnSize);
+    const blendZ = cameraZ - panelDistanceZ * 0.25;
+    const minZ = blendZ - panelDistanceZ * 0.25;
+    const maxZ = cameraZ + panelDistanceZ * (rowsSize - 0.29);
+    const contDomElement = document.body;
+    // const contDomElement = document.querySelectorAll(".canvas_container")[0];
+    const titleElement = document.querySelectorAll("h1.title_name_main_memory")[0];
+    const titleElementL = document.querySelectorAll(".building_title_info.building_state_title")[0];
+    const titleElementR = document.querySelectorAll(".building_title_info.building_city_main_memory")[0];
+    const titleElementBar = document.querySelectorAll(".title_line_main_reality")[0];
+
+    var canvasSize = { x: contDomElement.clientWidth, y: contDomElement.clientHeight };
+    const textureLoader = new THREE.TextureLoader();
+    THREE.Cache.enabled = true;
+    var lastHoveredObject = null;
+    const zMoveAccel = 0.3;
+    const zMoveDrag = 0.03;
+    const zMoveMaxSpeed = 5;
+    const zMoveMinSpeed = 0.0001;
+    var zMoveSpeed = 0;
+    var lastMousePos = null;
+    const clearColor = window.getComputedStyle(document.body, null).getPropertyValue('background-color');
+    const fogColor = clearColor;
+    const fogNear = 5;
+    const fogFar = 10;
+</script>
+<!-- <script src="https://cdn.jsdelivr.net/gh/itayreved/js@main/wfPanelsSlider.js"></script> -->
+<script>
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(fogColor, fogNear, fogFar);
+    // scene.fog = new THREE.FogExp2( 0x202020, 0.1 );
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.3, 10000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(new THREE.Color(clearColor), 1);
+    document.body.appendChild(renderer.domElement);
+    window.addEventListener('resize', handleResize, false);
+
+    const rows = [];
+    var items = [];
+
+    function initPanels() {
+        for (let r = 0; r < rowsSize; r++) {
+            const row = [];
+            for (let c = 0; c < columnSize; c++) {
+                const geometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+                const material = new THREE.MeshBasicMaterial({
+                    color: Math.random() * 0xffffff,
+                    transparent: true, opacity: 0
+                });
+                const panel = new THREE.Mesh(geometry, material);
+
+                const x = c * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.4 * (Math.random() - 0.5) - panelOffsetX;
+                const z = -r * panelDistanceZ;
+                panel.rowIndex = r;
+                panel.colIndex = c;
+                panel.userIndex = r * columnSize + c;
+                panel.position.set(x, panelBase, z);
+                setImagePicture(panel);
+                scene.add(panel);
+                row.push(panel);
+            }
+            rows.push(row);
+        }
+
+        // Set initial camera position
+        camera.position.set(0, 0.3, cameraZ);
+        camera.lookAt(0, 0, 0);
+
+        // Event listeners for mouse
+        document.addEventListener('wheel', handleMouseWheel);
+        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mousemove', handleMouseMove);
+        setInterval(updatePosition, 30);
+    }
+
+    function handleMouseWheel(event) {
+        const delta = Math.sign(event.deltaY);
+        zMoveSpeed += (zMoveAccel * delta / 12);
+        zMoveSpeed = Math.max(-zMoveMaxSpeed, Math.min(zMoveSpeed, zMoveMaxSpeed));
+    }
+
+    function updatePosition() {
+        if (zMoveSpeed == 0) {
+            return;
+        }
+        //   const moveDistance = panelDistanceZ * delta / 12;
+        const moveDistance = panelDistanceZ * zMoveSpeed;
+        zMoveSpeed *= (1 - zMoveDrag);
+        if (zMoveSpeed * zMoveSpeed < zMoveMinSpeed * zMoveMinSpeed) {
+            zMoveSpeed = 0;
+        }
+
+        //   Move the panels in the direction of the mouse wheel
+        rows.forEach(r => {
+            r.forEach(panel => {
+                panel.position.z += moveDistance;
+                var dist = cameraZ - panel.position.z;
+                if (dist > maxZ) {
+                    panel.position.z += rowsSize * panelDistanceZ;
+                    dist = cameraZ - panel.position.z;
+                    panel.rowIndex -= rows.length;
+                    panel.userIndex -= numPanels;
+                    const x = panel.colIndex * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
+                    setImagePicture(panel);
+                }
+                if (dist < blendZ) {
+                    panel.material.opacity = (dist - minZ) / (blendZ - minZ);
+                    if (dist < minZ) {
+                        // panel.position.z -= rows.length * panelDistanceZ;
+                        panel.position.z -= rowsSize * panelDistanceZ;
+                        panel.rowIndex += rows.length;
+                        panel.userIndex += numPanels;
+                        const x = panel.colIndex * panelDistanceX * 2 - panelDistanceX * (columnSize - 1) + panelDistanceX * 1.5 * (Math.random() - 0.5);
+                        setImagePicture(panel);
+                        panel.material.opacity = 1;
+                    }
+                }
+            })
+        });
+
+        handleMouseMove();
+    }
+
+    function handleResize(event) {
+        canvasSize = { x: contDomElement.clientWidth, y: contDomElement.clientHeight };
+        camera.aspect = canvasSize.x / canvasSize.y;
+        camera.updateProjectionMatrix();
+        renderer.setSize(canvasSize.x, canvasSize.y);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+
+    function setImagePicture(panel) {
+        const imageIndex = (1000 * items.length + panel.userIndex) % items.length;
+        if (!panel.imageIndex || panel.imageIndex != imageIndex) {
+            panel.imageIndex = imageIndex;
+            for (var f in items[imageIndex]) {
+                panel[f] = items[imageIndex][f];
+            }
+            textureLoader.load(panel.panelImage, function (image) {
+                const imageMaterial = new THREE.MeshBasicMaterial({
+                    map: image,
+                    transparent: true, opacity: 1.0,
+                    side: THREE.FrontSide
+                });
+                panel.material = imageMaterial;
+            });
+        }
+    }
+
+    //	parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+    function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
+        var items = [].concat(init);
+        var i = 0;
+        $(containerClass).each(function () {
+            var item = {};
+            for (let key in valueClassObj) {
+                const elem = $(this).find(valueClassObj[key]);
+                var txtval = null;
+                var imgval = null;
+                var attr = null;
+                $(elem).each((inx, e) => {
+                    txtval = txtval || $(e).text();
+                    imgval = imgval || $(e).attr('src');
+                    attr = attr || e.getAttribute('slug');
+                })
+                const val = attr || imgval || txtval;
+                item[key] = val;
+            }
+            item.userParam = userParam;
+            i++;
+            console.debug(i, item);
+            items.push(item);
+        });
+        console.log(`Got ${items.length} items`);
+        return items;
+    }
+
+    function handleMouseUp(event) {
+        var obj = getItersectedItem(event);
+        if (obj) {
+            const baseUrl = "/" + obj.userParam + "/";
+            const url = baseUrl + obj.slug;
+            console.log(`Jumping to: ${url}`);
+            window.location.href = url;
+        }
+    }
+
+    function convertToSlug(Text) {
+        return Text.toLowerCase()
+            .replace(/ /g, "-")
+            .replace(/[^\w-]+/g, "");
+    }
+
+    function setTitle(elem, value) {
+        if (!elem) return;
+        if (value && value.length > 0) {
+            $(elem).text(value);
+            setOpacity(elem, 1);
+        } else {
+            setOpacity(elem, 0);
+        }
+    }
+
+    function setOpacity(elem, value) {
+        if (!elem) return;
+        $(elem).css({ 'transition-duration': ((value > 0.5) ? '0.1s' : '0.5s') });
+        $(elem).css({ opacity: '' + value });
+    }
+
+    function handleMouseMove(event) {
+        var obj = getItersectedItem(event);
+        if (obj) {
+            if (obj !== lastHoveredObject) {
+                console.log(`Hovered ${obj.id} userIdx=${obj.userIndex} name=${obj.text}`);
+                lastHoveredObject = obj;
+                setTitle(titleElement, obj.text);
+                setTitle(titleElementL, obj.state);
+                setTitle(titleElementR, obj.city);
+                setOpacity(titleElementBar, 1);
+            }
+        } else if (lastHoveredObject) {
+            console.log(`Off ${lastHoveredObject.id}`);
+            lastHoveredObject = null;
+            setTitle(titleElement, "");
+            setTitle(titleElementL, "");
+            setTitle(titleElementR, "");
+            setOpacity(titleElementBar, 0);
+        }
+    }
+
+    function getItersectedItem(event) {
+        var mouse;
+        if (event) {
+            mouse = new THREE.Vector2();
+            mouse.x = (event.offsetX / contDomElement.clientWidth) * 2 - 1;
+            mouse.y = -(event.offsetY / contDomElement.clientHeight) * 2 + 1;
+            lastMousePos = mouse;
+        } else {
+            mouse = lastMousePos;
+        }
+        // Create a raycaster
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        // Find intersecting objects
+        const intersects = raycaster.intersectObjects(scene.children, false);
+        // Check if any object was clicked
+        if (intersects.length > 0) {
+            const itersectedObj = intersects[0].object;
+            return itersectedObj;
+        }
+        return null;
+    }
+</script>
+<script>
+    //				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+    window.addEventListener('load', () => {
+        var items1 = [];
+        items1 = getItemsFromContainer(items1, 'distracted-buildings', '.destroyed_building_cont', {
+            text: '.item_text',
+            city: '.building_city',
+            state: '.building_state',
+            image: '.item_image',
+            panelImage: '.item_image',
+            slug: '.item_slug'
+        });
+        // All abandoned records were migrated into distructed.
+        // items1 = getItemsFromContainer(items1, 'abounded-buildings', '.abandoned_building_cont', {
+        // 	text: '.item_text', 
+        // 	city: '.building_city', 
+        // 	state: '.building_state', 
+        // 	image: '.item_image',
+        // 	panelImage: '.item_image',
+        // 	slug: '.item_slug'
+        // });
+        items1 = getItemsFromContainer(items1, 'active-buildings', '.active_building_cont', {
+            text: '.item_text',
+            city: '.building_city',
+            state: '.building_state',
+            image: '.item_image',
+            panelImage: '.item_image',
+            slug: '.item_slug'
+        });
+        console.debug('Before compare:', items1);
+        items = items1.sort((a, b) => a.slug.localeCompare(b.slug));
+        console.debug('After compare:', items);
+
+        setTitle(titleElement, "");
+        setTitle(titleElementL, "");
+        setTitle(titleElementR, "");
+        setOpacity(titleElementBar, 0);
+        initPanels();
+        animate();
+    })
+</script>

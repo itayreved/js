@@ -1,0 +1,34 @@
+<style>
+    .data_container_active {
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .memory_text_item {
+        /* padding: 100px; */
+        text-align: center;
+        position: relative;
+        display: block ruby;
+        user-select: none;
+    }
+
+    .popup {
+        position: absolute;
+        user-select: none;
+        top: 100px;
+        left: 100px;
+        /* width: 300px; */
+        /* background-color: #333; */
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s 0.5s, opacity 0.3s ease-out;
+    }
+
+    .memory_text_item:hover .popup {
+        visibility: visible;
+        opacity: 1;
+        transition: visibility 0s 0s, opacity 0.3s linear;
+    }
+</style>

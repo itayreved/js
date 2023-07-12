@@ -1,0 +1,182 @@
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script>
+
+    var items = [];
+    var currItem = 0;
+    // const separator = '<div class="state ab_state">|</div>';
+    const separator = ' | ';
+
+    const dispMapping = {
+        memoryRT: '.memory_disp',
+        city: '.city_main_memory_disp',
+        name: '.name_main_memory_disp',
+        state: '.building_state_title_disp',
+        memoNum: '.memory_num_disp',
+        memoOwner: '.memory_owner_disp',
+        isPrivate: ['.memo_ispublic_disp', '.memo_isprivate_disp'],
+        memoryTypesARRAY: '.memo_type_disp',
+        btnNext: '.next_memo',
+        btnPrev: '.prev_memo'
+    };
+
+    // setDisplay(items, currItem, 
+    //		['city', 'name', 'state', 'memoNum', 'memoryTypesARRAY'], 
+    //		['memoRT'], 
+    //		['btnPrev', 'btnNext'], 
+    //		['isPrivate'], dispMapping);
+    function setDisplay(items, currItem, textFlds, rtFlds, buttonFlds, boolFlds, mapping) {
+        const item = items[currItem];
+        for (var f in textFlds) {
+            const e = $(mapping[textFlds[f]]);
+            if (item[textFlds[f]] instanceof Array) {
+                var arr = item[textFlds[f]];
+                // var out = '<div>' + arr[0] + '</div>';
+                // for (var i=1;i<arr.length;i++) {
+                // 	out += separator;
+                // 	out += '<div>' + arr[i] + '</div>';
+                // }
+                // $(e).html(out);
+                var out = arr[0];
+                for (var i = 1; i < arr.length; i++) {
+                    out += separator;
+                    out += arr[i];
+                }
+                $(e).text(out);
+            } else {
+                $(e).text(item[textFlds[f]]);
+            }
+        }
+        for (var f in rtFlds) {
+            const e = $(mapping[rtFlds[f]]);
+            $(e).html(item[rtFlds[f]]);
+        }
+        // prevBtn
+        if (currItem == 0) {
+            const e = document.querySelectorAll(mapping[buttonFlds[0]])[0];
+            e.setAttribute("disabled", true);
+            e.removeAttribute("href");
+            e.classList.add("button-disabled");
+            // const e = $(mapping[buttonFlds[0]]);
+            // $(e).prop("disabled",true);
+            // $(e).removeAttr("href");
+        } else {
+            const e = document.querySelectorAll(mapping[buttonFlds[0]])[0];
+            e.setAttribute("disabled", false);
+            e.href = "javascript:prevMemory()";
+            e.classList.remove("button-disabled");
+            // const e = $(mapping[buttonFlds[0]]);
+            // $(e).prop("disabled",false);
+            // $(e).attr("href", "javascript:prevMemory()");
+        }
+        // nextBtn
+        if (currItem == (items.length - 1)) {
+            const e = document.querySelectorAll(mapping[buttonFlds[1]])[0];
+            e.setAttribute("disabled", true);
+            e.removeAttribute("href");
+            e.classList.add("button-disabled");
+            // const e = $(mapping[buttonFlds[1]]);
+            // $(e).prop("disabled",true);
+            // $(e).removeAttr("href");
+        } else {
+            const e = document.querySelectorAll(mapping[buttonFlds[1]])[0];
+            e.setAttribute("disabled", false);
+            e.href = "javascript:nextMemory()";
+            e.classList.remove("button-disabled");
+            // const e = $(mapping[buttonFlds[1]]);
+            // $(e).prop("disabled",false);
+            // $(e).attr("href", "javascript:nextMemory()");
+        }
+        for (var f in boolFlds) {
+            const eFalse = $(mapping[boolFlds[f]][0]);
+            const eTrue = $(mapping[boolFlds[f]][1]);
+            if (item[boolFlds[f]]) {
+                $(eFalse).hide(100);
+                $(eTrue).show(100);
+            } else {
+                $(eFalse).show(100);
+                $(eTrue).hide(100);
+            }
+        }
+    }
+
+    function nextMemory() {
+        currItem += 1;
+        console.log("Prev:", currItem);
+        update();
+    }
+    function prevMemory() {
+        currItem -= 1;
+        console.log("Prev:", currItem);
+        update();
+    }
+
+    function update() {
+        setDisplay(items,
+            currItem,
+            ['city', 'name', 'state', 'memoNum', 'memoOwner', 'memoryTypesARRAY'],
+            ['memoryRT'],
+            ['btnPrev', 'btnNext'],
+            ['isPrivate'],
+            dispMapping);
+    }
+
+    //	parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+    function getItemsFromContainer(init, userParam, containerClass, valueClassObj) {
+        var items = [].concat(init);
+        var i = 0;
+        $(containerClass).each(function () {
+            var item = {};
+            for (let key in valueClassObj) {
+                const elem = $(this).find(valueClassObj[key]);
+                var txtval = null;
+                var imgval = null;
+                var attr = null;
+                $(elem).each((inx, e) => {
+                    if (key.includes("RT")) {
+                        txtval = $(e).html();
+                    } else {
+                        if (key.includes("ARRAY")) {
+                            console.log(e);
+                            const subElem = $(elem).find(valueClassObj[key] + '_item');
+                            txtval = [];
+                            $(subElem).each((inx, se) => {
+                                txtval.push($(se).text());
+                            });
+                        } else {
+                            txtval = txtval || $(e).text();
+                        }
+                    }
+                    imgval = imgval || $(e).attr('src');
+                    attr = attr || e.getAttribute('slug');
+                })
+                const val = attr || imgval || txtval;
+                item[key] = val;
+            }
+            item.userParam = userParam;
+            i++;
+            console.debug(i, item);
+            items.push(item);
+        });
+        console.log(`Got ${items.length} items`);
+        return items;
+    }
+
+</script>
+<script>
+    //				parameters: initial list, items-prefix, container-class, objext with fld:item-class pairs.
+    window.addEventListener('load', () => {
+        items = getItemsFromContainer(items, 'building', '.memo_info_cont', {
+            memoryRT: '.memory.code',
+            city: '.building_city_main_memory',
+            name: '.title_name_main_memory',
+            state: '.building_state_title',
+            memoNum: '.memory_num',
+            memoOwner: '.memory_owner',
+            isPrivate: '.memo_ispublic.w-condition-invisible',
+            memoryType: '.memo_type',
+            memoryTypesARRAY: '.memory_type_items'
+        });
+        update();
+    })
+</script>
